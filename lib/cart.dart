@@ -8,7 +8,7 @@ class CartScreen extends StatefulWidget{
   final String? token;
   final bool isLogged;
   final Function goto;
-  CartScreen({Key? key, this.token, required this.isLogged, required this.goto}) : super(key: key);
+  const CartScreen({super.key, this.token, required this.isLogged, required this.goto});
 
   @override
   State<CartScreen> createState() => _CartState();
@@ -22,7 +22,6 @@ class _CartState extends State<CartScreen> {
   Future<List<Cart>> getCart() async {
     final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart"),headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"});
     final body = json.decode(response.body);
-    print(body);
     return body.map<Cart>(Cart.fromJson).toList();
   }
 
@@ -43,15 +42,11 @@ class _CartState extends State<CartScreen> {
   }
 
   updateCart(int id, int quantity) async {
-    print("ID: $id");
-    print("Quantity: $quantity");
     double sum = 0;
-    final response = await http.patch(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"),
+    await http.patch(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"),
     headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"},
     body: '''{"id": "$id", "quantity": "$quantity"}'''
     );
-    final body = json.decode(response.body);
-    print(body);
     total = 0;
     cartsFuture = getCart();
     getCart().then((value) => {

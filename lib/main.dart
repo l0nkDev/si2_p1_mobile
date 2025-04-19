@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'login.dart';
 import 'cart.dart';
 import 'catalogue.dart';
+import 'product.dart';
 import 'purchases.dart';
 
 void main() {
@@ -39,6 +40,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
 var selectedIndex = 0;
+var product = 0;
 bool isLogged = false;
 String token = "";
 String refreshToken = "";
@@ -48,20 +50,26 @@ String refreshToken = "";
     isLogged = true;
   }
 
-  void goto(int n) { setState(() { selectedIndex = n; }); }
+  void goto(int n, {int y = 0}) { setState(() { 
+    print("y: $y | n: $n");
+    product = y;
+    selectedIndex = n; 
+  }); }
 
   @override
   Widget build(BuildContext context) {
   Widget page;
   switch (selectedIndex) {
     case 0:
-      page = Catalogue(isLogged: isLogged, token: token, goto: goto);
+      page = Catalogue(isLogged: isLogged, token: token, goto: goto,);
     case 1:
       page = Login(setToken, goto);
     case 2:
       page = CartScreen(isLogged: isLogged, token: token, goto: goto);
     case 3:
       page = Purchases(isLogged: isLogged, token: token, goto: goto);
+    case 4:
+      page = ProductScreen(isLogged: isLogged, token: token, goto: goto, productid: product,);
   default:
     throw UnimplementedError('no widget for $selectedIndex');
 }
@@ -104,17 +112,18 @@ String refreshToken = "";
                       ],
                     ),
                   ),
-                  InkWell(
-                    onTap: () {setState(() {selectedIndex = 3; Navigator.pop(context);});},
-                    child: Row(
-                      children: [
-                        SizedBox(height: 64, width: 10,),
-                        Icon(Icons.shopping_cart_outlined),
-                        SizedBox(height: 64, width: 10,),
-                        Text("Historial de compras"),
-                      ],
+                  if (isLogged)
+                    InkWell(
+                      onTap: () {setState(() {selectedIndex = 3; Navigator.pop(context);});},
+                      child: Row(
+                        children: [
+                          SizedBox(height: 64, width: 10,),
+                          Icon(Icons.shopping_cart_outlined),
+                          SizedBox(height: 64, width: 10,),
+                          Text("Historial de compras"),
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               )
               ],

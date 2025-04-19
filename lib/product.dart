@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'models/purchase.dart';
 
+// ignore: must_be_immutable
 class ProductScreen extends StatefulWidget{
   final String? token;
   final bool isLogged;
-  final int productid;
+  int productid;
   final Function goto;
   ProductScreen({Key? key, this.token, required this.isLogged, required this.goto, required this.productid}) : super(key: key);
 
@@ -16,12 +16,25 @@ class ProductScreen extends StatefulWidget{
 }
 
 
-
-
 class _ProductScreenState extends State<ProductScreen> {
   bool speechEnabled = false;
   late Future<Map> productsFuture;
-  TextEditingController search = TextEditingController();
+  TextEditingController rating = TextEditingController();
+
+  goto(int n) {
+    widget.productid = n;
+    productsFuture = getProducts();
+    setState(() {});
+  }
+
+  rate(int id, double rating) async {
+    await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/products/rate"),
+    headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"},
+    body: '''{"id": "$id", "rating": "$rating"}'''
+    );
+    productsFuture = getProducts();
+    setState(() {});
+  }
 
   Future<Map> getProducts() async {
     var data = {};
@@ -78,6 +91,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    rating.value = TextEditingValue(text: "5");
     return Scaffold(
       body: Builder(
         builder: (context) {
@@ -85,13 +99,62 @@ class _ProductScreenState extends State<ProductScreen> {
             child: 
             Column(
               children: <Widget>[
+                ElevatedButton(
+                  onPressed: () { widget.goto(0); }, 
+                  child: Text("Volver a catalogo"), 
+                  ),
                 Expanded(
                   child: FutureBuilder<Map>(
                     future: productsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         final products = snapshot.data!;
-                        return buildPurchases(products, widget.isLogged);
+                        return Column(
+                          children: [
+                            Card(
+                              child: Column(
+                                children: [
+                                  ListTile(
+                                    //leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${product.id}.png"),
+                                    title: Text(products["name"]),
+                                    subtitle: Text(products["brand"]),
+                                  ),
+                                  Row(
+                                    children: [SizedBox(width: 15,),
+                                      Text(products["description"]),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [SizedBox(width: 15,),
+                                      Text("✰${products["rating"]}"),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [SizedBox(width: 15,),
+                                      Text(products["discount"] == 0 ? "\$${double.parse(products["price"]).toStringAsFixed(2)}" : ""),
+                                      Text(products["discount"] != 0 ? "\$${double.parse(products["price"]).toStringAsFixed(2)}   " : "", style: TextStyle(decoration: TextDecoration.lineThrough),),
+                                      Text(products["discount"] != 0 ? "\$${products["discount_type"] == 'P' ? (double.parse(products["price"]) * (1-(double.parse(products["discount"])*0.01))).toStringAsFixed(2) : (double.parse(products["price"]) - double.parse(products["discount"])).toStringAsFixed(2)}" : ""),
+                                    ],
+                                  ),
+                                  Row( mainAxisSize: MainAxisSize.min,
+                                    children: [SizedBox(width: 15,),
+                                    Expanded(child: TextField(controller: rating)),
+                                    ElevatedButton(
+                                      onPressed: widget.isLogged ? () { rate(products["id"], double.parse(rating.value.text)); } : null, 
+                                      child: Text("Calificar"), 
+                                      ), 
+                                    ElevatedButton(
+                                      onPressed: widget.isLogged ? () { addToCart(products, context); } : null, 
+                                      child: Text("Al carrito"), 
+                                      ) 
+                                    ],
+                                  ),
+                                ],
+                              )
+                            ),
+                            Expanded(child: buildPurchases(products, widget.isLogged)),
+                          ],
+                        );
                       } else {
                         return const Text("No data");
                       }
@@ -107,21 +170,21 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   Widget buildPurchases(Map products, bool isLogged) => ListView.builder(
-    itemCount: products.length,
+    itemCount: products["recommendations"].length,
     itemBuilder: (context, index) {
-      final product = products[index];
+      final product = products["recommendations"][index];
 
-      return PurchaseCard(product: product, rate: rateDelivery);
+      return PurchaseCard(product: product, rate: rateDelivery, isLogged: isLogged, goto: goto, token: widget.token);
     }
   );
 
-  addToCart(Purchase prod, BuildContext context) async {
+  addToCart(Map prod, BuildContext context) async {
     var response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"), 
       headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: 'application/json'},
-      body: '{"id": "${prod.id}"}'
+      body: '{"id": "${prod["id"]}"}'
     );
     print(response.body);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("\"${prod.delivery_status}\" fue agregado al carrito.")));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("\"${prod["name"]}\" fue agregado al carrito.")));
   }
 }
 
@@ -130,10 +193,16 @@ class PurchaseCard extends StatelessWidget {
     super.key,
     required this.product,
     required this.rate,
+    required this.isLogged,
+    required this.goto,
+    required this.token,
   });
 
   final dynamic product;
   final Function rate;
+  final bool isLogged;
+  final Function goto;
+  final String? token;
   final TextEditingController quantity = TextEditingController();
 
   @override
@@ -147,8 +216,46 @@ class PurchaseCard extends StatelessWidget {
             title: Text(product["name"]),
             subtitle: Text(product["brand"]),
           ),
+          Row(
+            children: [SizedBox(width: 15,),
+              Text(product["description"]),
+            ],
+          ),
+          Row(
+            children: [SizedBox(width: 15,),
+              Text("✰${product["rating"]}"),
+            ],
+          ),
+          Row(
+            children: [SizedBox(width: 15,),
+              Text(product["discount"] == 0 ? "\$${double.parse(product["price"]).toStringAsFixed(2)}" : ""),
+              Text(product["discount"] != 0 ? "\$${double.parse(product["price"]).toStringAsFixed(2)}   " : "", style: TextStyle(decoration: TextDecoration.lineThrough),),
+              Text(product["discount"] != 0 ? "\$${product["discount_type"] == 'P' ? (double.parse(product["price"]) * (1-(double.parse(product["discount"])*0.01))).toStringAsFixed(2) : (double.parse(product["price"]) - double.parse(product["discount"])).toStringAsFixed(2)}" : ""),
+            ],
+          ),
+          Row( mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton(
+                onPressed: () { goto(product["id"]); }, 
+                child: Text("Ver mas..."), 
+                ),
+          ElevatedButton(
+            onPressed: isLogged ? () { addToCart(product, context, token); } : null, 
+            child: Text("Al carrito"), 
+            ) 
+            ],
+          ),
         ],
       )
     );
+  }
+
+  addToCart(Map prod, BuildContext context, String? token) async {
+    var response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"), 
+      headers: {HttpHeaders.authorizationHeader: "Bearer $token", HttpHeaders.contentTypeHeader: 'application/json'},
+      body: '{"id": "${prod["id"]}"}'
+    );
+    print(response.body);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("\"${prod["name"]}\" fue agregado al carrito.")));
   }
 }

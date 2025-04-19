@@ -95,7 +95,7 @@ class _CatalogueState extends State<Catalogue> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         final products = snapshot.data!;
-                        return buildProducts(products, widget.isLogged);
+                        return buildProducts(products, widget.isLogged, widget.goto);
                       } else {
                         return const Text("No data");
                       }
@@ -116,7 +116,7 @@ class _CatalogueState extends State<Catalogue> {
     );
   }
 
-  Widget buildProducts(List<Product> products, bool isLogged) => ListView.builder(
+  Widget buildProducts(List<Product> products, bool isLogged, Function goto) => ListView.builder(
     itemCount: products.length,
     itemBuilder: (context, index) {
       final product = products[index];
@@ -129,10 +129,35 @@ class _CatalogueState extends State<Catalogue> {
               title: Text(product.name),
               subtitle: Text(product.brand),
             ),
+            Row(
+              children: [SizedBox(width: 15,),
+                Text(product.description),
+              ],
+            ),
+            Row(
+              children: [SizedBox(width: 15,),
+                Text("✰${product.rating}"),
+              ],
+            ),
+            Row(
+              children: [SizedBox(width: 15,),
+                Text(product.discount == 0 ? "\$${product.price.toStringAsFixed(2)}" : ""),
+                Text(product.discount != 0 ? "\$${product.price.toStringAsFixed(2)}   " : "", style: TextStyle(decoration: TextDecoration.lineThrough),),
+                Text(product.discount != 0 ? "\$${product.discount_type == 'P' ? (product.price * (1-(product.discount*0.01))).toStringAsFixed(2) : (product.price - product.discount).toStringAsFixed(2)}" : ""),
+              ],
+            ),
+            Row( mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: () { goto(4, y: product.id); }, 
+                  child: Text("Ver mas..."), 
+                  ),
             ElevatedButton(
               onPressed: isLogged ? () { addToCart(product, context); } : null, 
               child: Text("Al carrito"), 
               ) 
+              ],
+            ),
           ],
         )
       );
