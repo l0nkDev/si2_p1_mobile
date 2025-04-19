@@ -1,0 +1,249 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'models/cart.dart';
+
+class CartScreen extends StatefulWidget{
+  final String? token;
+  final bool isLogged;
+  final Function goto;
+  CartScreen({Key? key, this.token, required this.isLogged, required this.goto}) : super(key: key);
+
+  @override
+  State<CartScreen> createState() => _CartState();
+}
+
+class _CartState extends State<CartScreen> {
+  double? total;
+  late Future<List<Cart>> cartsFuture;
+  TextEditingController search = TextEditingController();
+
+  Future<List<Cart>> getCart() async {
+    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart"),headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"});
+    final body = json.decode(response.body);
+    print(body);
+    return body.map<Cart>(Cart.fromJson).toList();
+  }
+
+  @override
+  initState() {
+    super.initState();
+    cartsFuture = getCart();
+    double sum = 0;
+    getCart().then((value) => {
+      for (var item in value) {
+        if (item.product.discount == 0) { sum += item.product.price * item.quantity }
+        else { if (item.product.discount_type == 'P') { sum += item.quantity * (item.product.price * (1 - (item.product.discount * 0.01))) } else { sum += item.quantity * (item.product.price - item.product.discount) }}
+      },
+      setState(() {
+        total = sum;
+      })
+    });
+  }
+
+  updateCart(int id, int quantity) async {
+    print("ID: $id");
+    print("Quantity: $quantity");
+    double sum = 0;
+    final response = await http.patch(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"),
+    headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"},
+    body: '''{"id": "$id", "quantity": "$quantity"}'''
+    );
+    final body = json.decode(response.body);
+    print(body);
+    total = 0;
+    cartsFuture = getCart();
+    getCart().then((value) => {
+      for (var item in value) {
+        if (item.product.discount == 0) { sum += item.product.price * item.quantity }
+        else { if (item.product.discount_type == 'P') { sum += item.quantity * (item.product.price * (1 - (item.product.discount * 0.01))) } else { sum += item.quantity * (item.product.price - item.product.discount) }}
+      },
+      setState(() {
+        total = sum;
+      })
+    });
+    setState(() {});
+  }
+
+  deleteCart(int id) async {
+    print("ID: $id");
+    double sum = 0;
+    final response = await http.delete(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/remove?id=$id"),
+    headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"}
+    );
+    final body = json.decode(response.body);
+    print(body);
+    total = 0;
+    cartsFuture = getCart();
+    getCart().then((value) => {
+      for (var item in value) {
+        if (item.product.discount == 0) { sum += item.product.price * item.quantity }
+        else { if (item.product.discount_type == 'P') { sum += item.quantity * (item.product.price * (1 - (item.product.discount * 0.01))) } else { sum += item.quantity * (item.product.price - item.product.discount) }}
+      },
+      setState(() {
+        total = sum;
+      })
+    });
+    setState(() {});
+  }
+
+  emptyCart() async {
+    double sum = 0;
+    final response = await http.delete(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart"),
+    headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"}
+    );
+    final body = json.decode(response.body);
+    print(body);
+    total = 0;
+    cartsFuture = getCart();
+    getCart().then((value) => {
+      for (var item in value) {
+        if (item.product.discount == 0) { sum += item.product.price * item.quantity }
+        else { if (item.product.discount_type == 'P') { sum += item.quantity * (item.product.price * (1 - (item.product.discount * 0.01))) } else { sum += item.quantity * (item.product.price - item.product.discount) }}
+      },
+      setState(() {
+        total = sum;
+      })
+    });
+    setState(() {});
+  }
+
+  payCart() async {
+    double sum = 0;
+    final response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/checkout"),
+    headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"}
+    );
+    final body = json.decode(response.body);
+    print(body);
+    cartsFuture = getCart();
+    getCart().then((value) => {
+      for (var item in value) {
+        if (item.product.discount == 0) { sum += item.product.price * item.quantity }
+        else { if (item.product.discount_type == 'P') { sum += item.quantity * (item.product.price * (1 - (item.product.discount * 0.01))) } else { sum += item.quantity * (item.product.price - item.product.discount) }}
+      },
+      setState(() {
+        total = sum;
+      })
+    });
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Builder(
+        builder: (context) {
+          return SafeArea(
+            child: 
+            Column(
+              children: <Widget>[
+                ElevatedButton(onPressed: widget.isLogged ? () {widget.goto(0);} : null, child: Text("Volver al catálogo")),
+                Expanded(
+                  child: FutureBuilder<List<Cart>>(
+
+                    future: cartsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final products = snapshot.data!;
+                        return buildCart(products, widget.isLogged);
+                      } else {
+                        return const Text("No data");
+                      }
+                    }
+                  ),
+                ),
+                Column(
+                  children: [
+                    Text("${total ?? ''}"),
+                    Row(mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ElevatedButton(onPressed: widget.isLogged ? () {emptyCart();} : null, child: Text("Vaciar carrito")),
+                        ElevatedButton(onPressed: widget.isLogged ? () {payCart();} : null, child: Text("Pagar")),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+      ),
+    );
+  }
+
+  Widget buildCart(List<Cart> cartitems, bool isLogged) => ListView.builder(
+    itemCount: cartitems.length,
+    itemBuilder: (context, index) {
+      final item = cartitems[index];
+
+      return cartItem(item: item, cartUpdate: updateCart, cartRemove: deleteCart);
+    }
+  );
+}
+
+class cartItem extends StatelessWidget {
+  cartItem({
+    super.key,
+    required this.item,
+    required this.cartUpdate,
+    required this.cartRemove,
+  });
+
+  final Cart item;
+  final Function cartUpdate;
+  final Function cartRemove;
+  final TextEditingController quantity = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    quantity.value = TextEditingValue(text: "${item.quantity}");
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            //leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${item.productid}.png"),
+            title: Text(item.product.name),
+            subtitle: Text(item.product.brand),
+          ),
+          Row(
+            children: [
+              SizedBox(width: 15),
+              Text(item.product.description),
+            ],
+          ),
+          Row(
+            children: [
+              SizedBox(width: 15),
+              Text("✰${item.product.rating}"),
+            ],
+          ),
+          Row(
+            children: [
+              SizedBox(width: 15),
+              Text(item.product.discount == 0 ? "" : "\$${item.product.price}   ", style: TextStyle(decoration: TextDecoration.lineThrough)),
+              Text("\$${item.product.discount == 0 ? item.product.price : (item.product.discount_type == 'P' ? item.product.price*((100-item.product.discount)*0.01) : item.product.price - item.product.discount)}"),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 15, right: 15),
+            child: Row(
+              children: [
+                Text("Cantidad: "),
+                Expanded(child: TextField(controller: quantity)),
+                ElevatedButton(
+                  onPressed: () {cartUpdate(item.id, int.parse(quantity.value.text));}, 
+                  child: Text("Guardar"), 
+                  ),
+                ElevatedButton(
+                  onPressed: () {cartRemove(item.id);}, 
+                  child: Text("Eliminar"), 
+                  ),
+              ],
+            ),
+          ) 
+        ],
+      )
+    );
+  }
+}
