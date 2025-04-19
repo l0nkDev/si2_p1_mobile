@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'models/purchase.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Purchases extends StatefulWidget{
   final String? token;
@@ -136,6 +137,12 @@ class PurchaseCard extends StatelessWidget {
   final Function rate;
   final TextEditingController quantity = TextEditingController();
 
+  Future<void> _launchUrl(url) async {
+  if (!await launchUrl(url)) {
+    throw Exception('Could not launch $url');
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     quantity.value = TextEditingValue(text: '5');
@@ -199,11 +206,15 @@ class PurchaseCard extends StatelessWidget {
                 Expanded(child: TextField(controller: quantity)),
                 ElevatedButton(
                   onPressed: () {rate(product["id"], double.parse(quantity.value.text));}, 
-                  child: Text("Guardar"), 
+                  child: Text("Enviar Calificacion"), 
                   ),
               ],
             ),
-          ) 
+          ),
+          ElevatedButton(
+            onPressed: () { _launchUrl(Uri.parse("http://l0nk5erver.duckdns.org:5000/facturas/${product["id"]}"));}, 
+            child: Text("Ver factura"), 
+            ), 
         ],
       )
     );
