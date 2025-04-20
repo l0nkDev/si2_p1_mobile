@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'components/labeledInput.dart';
+import 'package:si2_p1_mobile/firebase_api.dart';
+import '../../components/labeledInput.dart';
 
 class Login extends StatelessWidget{
   final Function setToken;
@@ -22,7 +23,8 @@ class Login extends StatelessWidget{
       '''
         {
           "email": "$email",
-          "password": "$password"
+          "password": "$password",
+          "fcm": "${await FirebaseApi().initNotifications()}"
         }
     '''
     );
@@ -56,6 +58,13 @@ class Login extends StatelessWidget{
                 child: Text("Iniciar sesión"),
                 onPressed: () {
                   sendLogin(email.value.text, passwd.value.text, context);
+                }),
+              SizedBox(height: 32,),
+              Text("No tienes cuenta?"),
+              OutlinedButton(
+                child: Text("Registrate"),
+                onPressed: () {
+                  goto(5);
                 })
             ],
           ),

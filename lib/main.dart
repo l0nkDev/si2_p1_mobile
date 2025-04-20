@@ -1,12 +1,19 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'login.dart';
-import 'cart.dart';
-import 'catalogue.dart';
-import 'product.dart';
-import 'purchases.dart';
+import 'package:si2_p1_mobile/firebase_api.dart';
+import 'package:si2_p1_mobile/firebase_options.dart';
+import 'screens/auth-session/login.dart';
+import 'screens/auth-session/register.dart';
+import 'screens/catalog-purchase/cart.dart';
+import 'screens/catalog-purchase/catalogue.dart';
+import 'screens/catalog-purchase/product.dart';
+import 'screens/user/purchases.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseApi().initNotifications();
   runApp(MyApp());
 }
 
@@ -70,6 +77,8 @@ String refreshToken = "";
       page = Purchases(isLogged: isLogged, token: token, goto: goto);
     case 4:
       page = ProductScreen(isLogged: isLogged, token: token, goto: goto, productid: product,);
+    case 5:
+      page = Register(setToken, goto);
   default:
     throw UnimplementedError('no widget for $selectedIndex');
 }

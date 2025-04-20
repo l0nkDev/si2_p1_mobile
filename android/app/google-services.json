@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1038377162874",
+    "project_id": "si2-p1-mobile",
+    "storage_bucket": "si2-p1-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1038377162874:android:004b29b4cc40b9093383c3",
+        "android_client_info": {
+          "package_name": "com.example.si2_p1_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrZTdYH7ZlY4n9GT7U_iTeGvxmeypBqHE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
