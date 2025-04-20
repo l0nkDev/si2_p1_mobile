@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'models/cart.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+
 
 class CartScreen extends StatefulWidget{
   final String? token;
@@ -105,23 +108,19 @@ class _CartState extends State<CartScreen> {
   }
 
   payCart() async {
-    double sum = 0;
-    final response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/checkout"),
-    headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"}
+    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/stripe/checkout"),
+    headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"}
     );
-    final body = json.decode(response.body);
-    print(body);
-    cartsFuture = getCart();
-    getCart().then((value) => {
-      for (var item in value) {
-        if (item.product.discount == 0) { sum += item.product.price * item.quantity }
-        else { if (item.product.discount_type == 'P') { sum += item.quantity * (item.product.price * (1 - (item.product.discount * 0.01))) } else { sum += item.quantity * (item.product.price - item.product.discount) }}
-      },
-      setState(() {
-        total = sum;
-      })
-    });
-    setState(() {});
+    print(utf8.decode(response.bodyBytes));
+    var decodedResponse = jsonDecode(utf8.decode(response.bodyBytes)) as Map;
+    _launchUrl(Uri.parse(decodedResponse["url"]));
+    widget.goto(0);
+  }
+
+  Future<void> _launchUrl(url) async {
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
   }
 
   @override

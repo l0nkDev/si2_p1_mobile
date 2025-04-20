@@ -15,9 +15,6 @@ class Purchases extends StatefulWidget{
   State<Purchases> createState() => _PurchasesState();
 }
 
-
-
-
 class _PurchasesState extends State<Purchases> {
   bool speechEnabled = false;
   late Future<List> productsFuture;
@@ -138,10 +135,10 @@ class PurchaseCard extends StatelessWidget {
   final TextEditingController quantity = TextEditingController();
 
   Future<void> _launchUrl(url) async {
-  if (!await launchUrl(url)) {
-    throw Exception('Could not launch $url');
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
