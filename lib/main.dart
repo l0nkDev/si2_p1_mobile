@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:si2_p1_mobile/firebase_api.dart';
 import 'package:si2_p1_mobile/firebase_options.dart';
+import 'package:si2_p1_mobile/screens/user/profile.dart';
 import 'screens/auth-session/login.dart';
 import 'screens/auth-session/register.dart';
 import 'screens/catalog-purchase/cart.dart';
@@ -28,7 +33,7 @@ class MyApp extends StatelessWidget {
         title: 'SI2 mobile',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.greenAccent),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
         ),
         home: MyHomePage(),
       ),
@@ -40,6 +45,8 @@ class MyAppState extends ChangeNotifier {
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -49,12 +56,14 @@ class _MyHomePageState extends State<MyHomePage> {
 var selectedIndex = 0;
 var product = 0;
 bool isLogged = false;
+late SharedPreferences prefs;
 String token = "";
 String refreshToken = "";
 
   void setToken(String newToken) {
     token = newToken;
     isLogged = true;
+    prefs.setString('token', token);
   }
 
   void goto(int n, {int y = 0}) { setState(() { 
@@ -62,6 +71,36 @@ String refreshToken = "";
     product = y;
     selectedIndex = n; 
   }); }
+
+  @override
+  void initState() {
+    initPrefs();
+    super.initState();
+  }
+
+  Future<void> initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token') ?? '';
+    if (token != '') {isLogged = true;}
+    setState(() {});
+  }
+
+  logout() async {
+    await http.post(Uri.http("l0nk5erver.duckdns.org:5000", 'auth/logout'), 
+      headers: {HttpHeaders.authorizationHeader: "Bearer $token", HttpHeaders.contentTypeHeader: 'application/json'},
+      body: 
+      '''
+        {
+          "fcm": "${await FirebaseApi().initNotifications()}"
+        }
+    '''
+    );
+    token = ""; 
+    isLogged = false;
+    prefs.setString('token', '');
+    selectedIndex = 0; 
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +118,8 @@ String refreshToken = "";
       page = ProductScreen(isLogged: isLogged, token: token, goto: goto, productid: product,);
     case 5:
       page = Register(setToken, goto);
+    case 6:
+      page = Profile(token);
   default:
     throw UnimplementedError('no widget for $selectedIndex');
 }
@@ -95,9 +136,7 @@ String refreshToken = "";
                   InkWell(
                     onTap: () {setState(() {
                       if (isLogged) {
-                        token = ""; 
-                        isLogged = false;
-                        selectedIndex = 0; 
+                        logout();
                       } else { selectedIndex = 1; }
                       Navigator.pop(context);
                       });},
@@ -130,6 +169,18 @@ String refreshToken = "";
                           Icon(Icons.shopping_cart_outlined),
                           SizedBox(height: 64, width: 10,),
                           Text("Historial de compras"),
+                        ],
+                      ),
+                    ),
+                  if (isLogged)
+                    InkWell(
+                      onTap: () {setState(() {selectedIndex = 6; Navigator.pop(context);});},
+                      child: Row(
+                        children: [
+                          SizedBox(height: 64, width: 10,),
+                          Icon(Icons.person),
+                          SizedBox(height: 64, width: 10,),
+                          Text("Perfil de usuario"),
                         ],
                       ),
                     ),

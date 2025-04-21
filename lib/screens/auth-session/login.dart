@@ -7,7 +7,7 @@ import '../../components/labeledInput.dart';
 class Login extends StatelessWidget{
   final Function setToken;
   final Function goto;
-  Login(this.setToken, this.goto);
+  const Login(this.setToken, this.goto, {super.key});
 
 
 

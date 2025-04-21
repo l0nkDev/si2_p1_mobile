@@ -9,7 +9,7 @@ class Purchases extends StatefulWidget{
   final String? token;
   final bool isLogged;
   final Function goto;
-  Purchases({Key? key, this.token, required this.isLogged, required this.goto}) : super(key: key);
+  const Purchases({super.key, this.token, required this.isLogged, required this.goto});
 
   @override
   State<Purchases> createState() => _PurchasesState();

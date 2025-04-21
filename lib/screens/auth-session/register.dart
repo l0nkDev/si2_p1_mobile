@@ -7,7 +7,7 @@ import '../../components/labeledInput.dart';
 class Register extends StatelessWidget{
   final Function setToken;
   final Function goto;
-  Register(this.setToken, this.goto);
+  const Register(this.setToken, this.goto, {super.key});
 
 
 

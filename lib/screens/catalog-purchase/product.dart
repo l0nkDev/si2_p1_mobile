@@ -9,7 +9,7 @@ class ProductScreen extends StatefulWidget{
   final bool isLogged;
   int productid;
   final Function goto;
-  ProductScreen({Key? key, this.token, required this.isLogged, required this.goto, required this.productid}) : super(key: key);
+  ProductScreen({super.key, this.token, required this.isLogged, required this.goto, required this.productid});
 
   @override
   State<ProductScreen> createState() => _ProductScreenState();
@@ -115,7 +115,41 @@ class _ProductScreenState extends State<ProductScreen> {
                               child: Column(
                                 children: [
                                   ListTile(
-                                    //leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${product.id}.png"),
+                                    leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${products["id"]}.png",
+                                        loadingBuilder: (BuildContext context, Widget child,
+                                            ImageChunkEvent? loadingProgress) {
+                                          final totalBytes = loadingProgress?.expectedTotalBytes;
+                                          final bytesLoaded =
+                                              loadingProgress?.cumulativeBytesLoaded;
+                                          if (totalBytes != null && bytesLoaded != null) {
+                                            return CircularProgressIndicator(
+                                              backgroundColor: Colors.white70,
+                                              value: bytesLoaded / totalBytes,
+                                              color: Colors.blue[900],
+                                              strokeWidth: 5.0,
+                                            );
+                                          } else {
+                                            return child;
+                                          }
+                                        },
+                                        frameBuilder: (BuildContext context, Widget child,
+                                            int? frame, bool wasSynchronouslyLoaded) {
+                                          if (wasSynchronouslyLoaded) {
+                                            return child;
+                                          }
+                                          return AnimatedOpacity(
+                                            opacity: frame == null ? 0 : 1,
+                                            duration: const Duration(seconds: 1),
+                                            curve: Curves.easeOut,
+                                            child: child,
+                                          );
+                                        },
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                              
+                                        return const Text('😢');
+                                        },
+                                      ),
                                     title: Text(products["name"]),
                                     subtitle: Text(products["brand"]),
                                   ),
@@ -212,7 +246,41 @@ class PurchaseCard extends StatelessWidget {
       child: Column(
         children: [
           ListTile(
-            //leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${product.id}.png"),
+            leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${product["id"]}.png",
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  final totalBytes = loadingProgress?.expectedTotalBytes;
+                  final bytesLoaded =
+                      loadingProgress?.cumulativeBytesLoaded;
+                  if (totalBytes != null && bytesLoaded != null) {
+                    return CircularProgressIndicator(
+                      backgroundColor: Colors.white70,
+                      value: bytesLoaded / totalBytes,
+                      color: Colors.blue[900],
+                      strokeWidth: 5.0,
+                    );
+                  } else {
+                    return child;
+                  }
+                },
+                frameBuilder: (BuildContext context, Widget child,
+                    int? frame, bool wasSynchronouslyLoaded) {
+                  if (wasSynchronouslyLoaded) {
+                    return child;
+                  }
+                  return AnimatedOpacity(
+                    opacity: frame == null ? 0 : 1,
+                    duration: const Duration(seconds: 1),
+                    curve: Curves.easeOut,
+                    child: child,
+                  );
+                },
+                fit: BoxFit.cover,
+                errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+        
+                  return const Text('😢');
+                },
+              ),
             title: Text(product["name"]),
             subtitle: Text(product["brand"]),
           ),

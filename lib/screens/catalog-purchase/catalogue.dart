@@ -10,7 +10,7 @@ class Catalogue extends StatefulWidget{
   final String? token;
   final bool isLogged;
   final Function goto;
-  Catalogue({Key? key, this.token, required this.isLogged, required this.goto}) : super(key: key);
+  const Catalogue({super.key, this.token, required this.isLogged, required this.goto});
 
   @override
   State<Catalogue> createState() => _CatalogueState();
@@ -21,19 +21,26 @@ class Catalogue extends StatefulWidget{
 
 class _CatalogueState extends State<Catalogue> {
   bool speechEnabled = false;
-  stt.SpeechToText _speechToText = stt.SpeechToText();
-  Future<List<Product>> productsFuture = getProducts();
+  final stt.SpeechToText _speechToText = stt.SpeechToText();
   TextEditingController search = TextEditingController();
   String _lastWords = '';
+  
+  List<Product> products  = [];
+  int nextPage = 0;
+  
+  ValueNotifier<int> itemCount = ValueNotifier<int>(0);
 
-  static Future<List<Product>> getProducts() async {
-    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/products"));
-    final body = json.decode(response.body);
-    return body.map<Product>(Product.fromJson).toList();
+  void loadNextPage() {
+    getProducts(nextPage++, search.text).then((newProducts){
+      products.addAll(newProducts);
+      itemCount.value = products.length;
+    });
   }
 
-  static Future<List<Product>> searchProducts(String query) async {
-    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/products/search?q=$query"));
+  static Future<List<Product>> getProducts(int page, String query) async {
+    late dynamic response;
+    if (query == '') {response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/products?page=$page"));}
+    else {response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/products/search?q=$query&page=$page"));}
     final body = json.decode(response.body);
     return body.map<Product>(Product.fromJson).toList();
   }
@@ -42,6 +49,14 @@ class _CatalogueState extends State<Catalogue> {
   initState() {
     super.initState();
     _initSpeech();
+    loadNextPage();
+  }
+
+  Product getProductAtIndex(int index) {
+    if (index > products.length - 5) {
+      loadNextPage();
+    }
+    return products[index];
   }
 
   void _initSpeech() async {
@@ -62,8 +77,10 @@ class _CatalogueState extends State<Catalogue> {
     void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {_lastWords = result.recognizedWords;}); 
     search.value = TextEditingValue(text: _lastWords);
-    productsFuture = searchProducts(search.text);
-    setState(() {});
+    products = [];
+    nextPage = 0;
+    itemCount.value = 0;
+    loadNextPage();
   }
 
   @override
@@ -77,28 +94,26 @@ class _CatalogueState extends State<Catalogue> {
               children: <Widget>[
                 Row(
                   children: [
-                    Expanded(child: TextField(
-                      controller: search,
-                      decoration: InputDecoration(border: OutlineInputBorder()),
-                    )),
+                    Expanded(child: 
+                      TextField(
+                        controller: search,
+                        decoration: InputDecoration(border: OutlineInputBorder()),
+                      )
+                    ),
                     ElevatedButton(onPressed: () {
-                      if (search.text != '') {productsFuture = searchProducts(search.text);} 
-                      else { productsFuture = getProducts();}
-                      setState(() {});
+                      products = [];
+                      nextPage = 0;
+                      itemCount.value = 0;
+                      loadNextPage();
                       }, child: Text("Search")),
                     ElevatedButton(onPressed: widget.isLogged ? () {widget.goto(2);} : null, child: Text("Carrito")),
                   ],
                 ),
                 Expanded(
-                  child: FutureBuilder<List<Product>>(
-                    future: productsFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        final products = snapshot.data!;
-                        return buildProducts(products, widget.isLogged, widget.goto);
-                      } else {
-                        return const Text("No data");
-                      }
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: itemCount,
+                    builder: (BuildContext context, int value, Widget? child) {
+                      return buildProducts(products, widget.isLogged, widget.goto);
                     }
                   ),
                 )
@@ -117,15 +132,49 @@ class _CatalogueState extends State<Catalogue> {
   }
 
   Widget buildProducts(List<Product> products, bool isLogged, Function goto) => ListView.builder(
-    itemCount: products.length,
-    itemBuilder: (context, index) {
-      final product = products[index];
+      itemCount: itemCount.value,
+      itemBuilder: (context, index) {
+      final product = getProductAtIndex(index);
 
       return Card(
         child: Column(
           children: [
             ListTile(
-              //leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${product.id}.png"),
+              leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${product.id}.png",
+                  loadingBuilder: (BuildContext context, Widget child,
+                      ImageChunkEvent? loadingProgress) {
+                    final totalBytes = loadingProgress?.expectedTotalBytes;
+                    final bytesLoaded =
+                        loadingProgress?.cumulativeBytesLoaded;
+                    if (totalBytes != null && bytesLoaded != null) {
+                      return CircularProgressIndicator(
+                        backgroundColor: Colors.white70,
+                        value: bytesLoaded / totalBytes,
+                        color: Colors.blue[900],
+                        strokeWidth: 5.0,
+                      );
+                    } else {
+                      return child;
+                    }
+                  },
+                  frameBuilder: (BuildContext context, Widget child,
+                      int? frame, bool wasSynchronouslyLoaded) {
+                    if (wasSynchronouslyLoaded) {
+                      return child;
+                    }
+                    return AnimatedOpacity(
+                      opacity: frame == null ? 0 : 1,
+                      duration: const Duration(seconds: 1),
+                      curve: Curves.easeOut,
+                      child: child,
+                    );
+                  },
+                  fit: BoxFit.cover,
+                  errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+         
+                   return const Text('😢');
+                  },
+                ),
               title: Text(product.name),
               subtitle: Text(product.brand),
             ),
