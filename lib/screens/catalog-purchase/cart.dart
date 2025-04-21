@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:si2_p1_mobile/models/user.dart';
 import '../../models/cart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -20,6 +21,7 @@ class CartScreen extends StatefulWidget{
 class _CartState extends State<CartScreen> {
   double? total;
   late Future<List<Cart>> cartsFuture;
+  String vip = '';
   TextEditingController search = TextEditingController();
 
   Future<List<Cart>> getCart() async {
@@ -28,11 +30,25 @@ class _CartState extends State<CartScreen> {
     return body.map<Cart>(Cart.fromJson).toList();
   }
 
+  Future<User> getUser() async {
+    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/self"),headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"});
+    final body = json.decode(response.body);
+    final user = User.fromJson(body);
+    print(user.name);
+    return user;
+  }
+
   @override
   initState() {
     super.initState();
     cartsFuture = getCart();
     double sum = 0;
+    getUser().then((value) => {
+      vip = value.vip,
+      setState(() {
+        total = total;
+      })
+    });
     getCart().then((value) => {
       for (var item in value) {
         if (item.product.discount == 0) { sum += item.product.price * item.quantity }
@@ -149,7 +165,15 @@ class _CartState extends State<CartScreen> {
                 ),
                 Column(
                   children: [
-                    Text("${total ?? ''}"),
+                    Row( mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(vip == 'Y' ? '' : (total ?? 0).toStringAsFixed(2)),
+                        Text(vip == 'Y' ? '\$' : '', style: TextStyle(decoration: TextDecoration.lineThrough),),
+                        Text(vip == 'Y' ? (total ?? 0).toStringAsFixed(2) : '', style: TextStyle(decoration: TextDecoration.lineThrough),),
+                        Text(vip == 'Y' ? '   Descuento -15% VIP:   ' : ''),
+                        Text(vip == 'Y' ? ((total ?? 0)*0.85).toStringAsFixed(2) : ''),
+                      ],
+                    ),
                     Row(mainAxisSize: MainAxisSize.min,
                       children: [
                         ElevatedButton(onPressed: widget.isLogged ? () {emptyCart();} : null, child: Text("Vaciar carrito")),
@@ -196,7 +220,6 @@ class cartItem extends StatelessWidget {
       child: Column(
         children: [
           ListTile(
-            //leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${item.productid}.png"),
             title: Text(item.product.name),
             subtitle: Text(item.product.brand),
           ),

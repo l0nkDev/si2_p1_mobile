@@ -31,7 +31,7 @@ class Login extends StatelessWidget{
     print(response.body);
     var decodedResponse = jsonDecode(utf8.decode(response.bodyBytes)) as Map;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Sesión iniciada correctamente como user ${decodedResponse["id"]}")),
+      SnackBar(content: Text("Sesión iniciada correctamente.")),
     );
     setToken(decodedResponse["access_token"]);
     goto(0);
