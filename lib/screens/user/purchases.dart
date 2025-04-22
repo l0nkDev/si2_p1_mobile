@@ -23,7 +23,7 @@ class _PurchasesState extends State<Purchases> {
   Future<List> getProducts() async {
     var purchases = [];
     print("started");
-    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/purchases"), headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"});
+    final response = await http.get(Uri.parse("http://34.70.148.131:5000/users/purchases"), headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"});
     final body = jsonDecode(utf8.decode(response.bodyBytes)) as List;
     for (var item in body) {
       var items = [];
@@ -65,7 +65,7 @@ class _PurchasesState extends State<Purchases> {
   }
 
   rateDelivery(int id, double rating) async {
-    final response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/purchases/rate"),
+    final response = await http.post(Uri.parse("http://34.70.148.131:5000/users/purchases/rate"),
     headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"},
     body: '''{"id": "$id", "rating": "$rating"}'''
     );
@@ -114,7 +114,7 @@ class _PurchasesState extends State<Purchases> {
   );
 
   addToCart(Purchase prod, BuildContext context) async {
-    var response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"), 
+    var response = await http.post(Uri.parse("http://34.70.148.131:5000/users/cart/add"), 
       headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: 'application/json'},
       body: '{"id": "${prod.id}"}'
     );
@@ -147,7 +147,7 @@ class PurchaseCard extends StatelessWidget {
       child: Column(
         children: [
           ListTile(
-            //leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${product.id}.png"),
+            //leading: Image.network("http://34.70.148.131:5000/products/img/${product.id}.png"),
             title: Text(product["paid_on"]),
             subtitle: Text(product["delivery_status"]),
           ),
@@ -209,7 +209,7 @@ class PurchaseCard extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () { _launchUrl(Uri.parse("http://l0nk5erver.duckdns.org:5000/facturas/${product["id"]}"));}, 
+            onPressed: () { _launchUrl(Uri.parse("http://34.70.148.131:5000/facturas/${product["id"]}"));}, 
             child: Text("Ver factura"), 
             ), 
         ],

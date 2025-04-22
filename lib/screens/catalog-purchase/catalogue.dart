@@ -39,8 +39,8 @@ class _CatalogueState extends State<Catalogue> {
 
   static Future<List<Product>> getProducts(int page, String query) async {
     late dynamic response;
-    if (query == '') {response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/products?page=$page"));}
-    else {response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/products/search?q=$query&page=$page"));}
+    if (query == '') {response = await http.get(Uri.parse("http://34.70.148.131:5000/products?page=$page"));}
+    else {response = await http.get(Uri.parse("http://34.70.148.131:5000/products/search?q=$query&page=$page"));}
     final body = json.decode(response.body);
     return body.map<Product>(Product.fromJson).toList();
   }
@@ -140,7 +140,7 @@ class _CatalogueState extends State<Catalogue> {
         child: Column(
           children: [
             ListTile(
-              leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${product.id}.png",
+              leading: Image.network("http://34.70.148.131:5000/products/img/${product.id}.png",
                   loadingBuilder: (BuildContext context, Widget child,
                       ImageChunkEvent? loadingProgress) {
                     final totalBytes = loadingProgress?.expectedTotalBytes;
@@ -214,7 +214,7 @@ class _CatalogueState extends State<Catalogue> {
   );
 
   addToCart(Product prod, BuildContext context) async {
-    var response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"), 
+    var response = await http.post(Uri.parse("http://34.70.148.131:5000/users/cart/add"), 
       headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: 'application/json'},
       body: '{"id": "${prod.id}"}'
     );

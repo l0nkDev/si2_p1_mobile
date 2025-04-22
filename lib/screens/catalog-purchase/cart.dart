@@ -25,13 +25,13 @@ class _CartState extends State<CartScreen> {
   TextEditingController search = TextEditingController();
 
   Future<List<Cart>> getCart() async {
-    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart"),headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"});
+    final response = await http.get(Uri.parse("http://34.70.148.131:5000/users/cart"),headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"});
     final body = json.decode(response.body);
     return body.map<Cart>(Cart.fromJson).toList();
   }
 
   Future<User> getUser() async {
-    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/self"),headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"});
+    final response = await http.get(Uri.parse("http://34.70.148.131:5000/users/self"),headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"});
     final body = json.decode(response.body);
     final user = User.fromJson(body);
     print(user.name);
@@ -62,7 +62,7 @@ class _CartState extends State<CartScreen> {
 
   updateCart(int id, int quantity) async {
     double sum = 0;
-    await http.patch(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"),
+    await http.patch(Uri.parse("http://34.70.148.131:5000/users/cart/add"),
     headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"},
     body: '''{"id": "$id", "quantity": "$quantity"}'''
     );
@@ -83,7 +83,7 @@ class _CartState extends State<CartScreen> {
   deleteCart(int id) async {
     print("ID: $id");
     double sum = 0;
-    final response = await http.delete(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/remove?id=$id"),
+    final response = await http.delete(Uri.parse("http://34.70.148.131:5000/users/cart/remove?id=$id"),
     headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"}
     );
     final body = json.decode(response.body);
@@ -104,7 +104,7 @@ class _CartState extends State<CartScreen> {
 
   emptyCart() async {
     double sum = 0;
-    final response = await http.delete(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart"),
+    final response = await http.delete(Uri.parse("http://34.70.148.131:5000/users/cart"),
     headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"}
     );
     final body = json.decode(response.body);
@@ -124,7 +124,7 @@ class _CartState extends State<CartScreen> {
   }
 
   payCart() async {
-    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/stripe/checkout"),
+    final response = await http.get(Uri.parse("http://34.70.148.131:5000/stripe/checkout"),
     headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}"}
     );
     print(utf8.decode(response.bodyBytes));

@@ -28,7 +28,7 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   rate(int id, double rating) async {
-    await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/products/rate"),
+    await http.post(Uri.parse("http://34.70.148.131:5000/users/products/rate"),
     headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"},
     body: '''{"id": "$id", "rating": "$rating"}'''
     );
@@ -39,7 +39,7 @@ class _ProductScreenState extends State<ProductScreen> {
   Future<Map> getProducts() async {
     var data = {};
     print("started");
-    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/products/get?id=${widget.productid}"));
+    final response = await http.get(Uri.parse("http://34.70.148.131:5000/products/get?id=${widget.productid}"));
     final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map;
     var items = [];
     for (var item in body["recommendations"]) {
@@ -80,7 +80,7 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   rateDelivery(int id, double rating) async {
-    final response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/purchases/rate"),
+    final response = await http.post(Uri.parse("http://34.70.148.131:5000/users/purchases/rate"),
     headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: "application/json"},
     body: '''{"id": "$id", "rating": "$rating"}'''
     );
@@ -115,7 +115,7 @@ class _ProductScreenState extends State<ProductScreen> {
                               child: Column(
                                 children: [
                                   ListTile(
-                                    leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${products["id"]}.png",
+                                    leading: Image.network("http://34.70.148.131:5000/products/img/${products["id"]}.png",
                                         loadingBuilder: (BuildContext context, Widget child,
                                             ImageChunkEvent? loadingProgress) {
                                           final totalBytes = loadingProgress?.expectedTotalBytes;
@@ -213,7 +213,7 @@ class _ProductScreenState extends State<ProductScreen> {
   );
 
   addToCart(Map prod, BuildContext context) async {
-    var response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"), 
+    var response = await http.post(Uri.parse("http://34.70.148.131:5000/users/cart/add"), 
       headers: {HttpHeaders.authorizationHeader: "Bearer ${widget.token}", HttpHeaders.contentTypeHeader: 'application/json'},
       body: '{"id": "${prod["id"]}"}'
     );
@@ -246,7 +246,7 @@ class PurchaseCard extends StatelessWidget {
       child: Column(
         children: [
           ListTile(
-            leading: Image.network("http://l0nk5erver.duckdns.org:5000/products/img/${product["id"]}.png",
+            leading: Image.network("http://34.70.148.131:5000/products/img/${product["id"]}.png",
                 loadingBuilder: (BuildContext context, Widget child,
                     ImageChunkEvent? loadingProgress) {
                   final totalBytes = loadingProgress?.expectedTotalBytes;
@@ -319,7 +319,7 @@ class PurchaseCard extends StatelessWidget {
   }
 
   addToCart(Map prod, BuildContext context, String? token) async {
-    var response = await http.post(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/cart/add"), 
+    var response = await http.post(Uri.parse("http://34.70.148.131:5000/users/cart/add"), 
       headers: {HttpHeaders.authorizationHeader: "Bearer $token", HttpHeaders.contentTypeHeader: 'application/json'},
       body: '{"id": "${prod["id"]}"}'
     );

@@ -20,7 +20,7 @@ class Profile extends StatelessWidget{
     TextEditingController address = TextEditingController();
 
   Future<User> getUser() async {
-    final response = await http.get(Uri.parse("http://l0nk5erver.duckdns.org:5000/users/self"),headers: {HttpHeaders.authorizationHeader: "Bearer $token"});
+    final response = await http.get(Uri.parse("http://34.70.148.131:5000/users/self"),headers: {HttpHeaders.authorizationHeader: "Bearer $token"});
     final body = json.decode(response.body);
     final user = User.fromJson(body);
     print(user.name);
