@@ -28,7 +28,7 @@ class Profile extends StatelessWidget{
   }
 
   Future<void> updateProfile(String email, String password, String name, String lname, String country, String state, String address, BuildContext context) async {
-      await http.patch(Uri.http("l0nk5erver.duckdns.org:5000", 'users/self'), 
+      await http.patch(Uri.http("34.70.148.131:5000", 'users/self'), 
       headers: {HttpHeaders.authorizationHeader: "Bearer $token", HttpHeaders.contentTypeHeader: 'application/json'},
       body: 
       '''

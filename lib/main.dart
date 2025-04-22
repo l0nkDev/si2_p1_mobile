@@ -86,7 +86,7 @@ String refreshToken = "";
   }
 
   logout() async {
-    await http.post(Uri.http("l0nk5erver.duckdns.org:5000", 'auth/logout'), 
+    await http.post(Uri.http("34.70.148.131:5000", 'auth/logout'), 
       headers: {HttpHeaders.authorizationHeader: "Bearer $token", HttpHeaders.contentTypeHeader: 'application/json'},
       body: 
       '''

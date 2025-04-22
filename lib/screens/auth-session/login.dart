@@ -17,7 +17,7 @@ class Login extends StatelessWidget{
       'Accept': 'application/json',
     };
     
-      var response = await http.post(Uri.http("l0nk5erver.duckdns.org:5000", 'auth/login/email'), 
+      var response = await http.post(Uri.http("34.70.148.131:5000", 'auth/login/email'), 
       headers: headers,
       body: 
       '''
